@@ -1,0 +1,406 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Drawing HTML</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/paper-full.min.js"></script>
+    <script type="text/javascript" src="js/base64.js"></script>
+    <script type="text/javascript" src="js/html2canvas.min.js"></script>
+    <script type="text/javascript" src="js/canvas2image.js"></script>
+    <script type="text/javascript" src="js/FileSaver.js"></script>
+    <script type="text/javascript" src="js/canvas-toBlob.js"></script>
+    <script type="text/javascript" src="js/Blob.js"></script>
+    <style type="text/css">
+        body
+        {
+            background-color: #abdaee;
+        }
+        #myCanvas
+        {
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="row">
+                <div class="col-sm-3">
+                    <h3 align="center">TOOLS</h3>
+                    <div class="row" align="center">
+                        <div id="toolbar">
+                            <br>
+                            Color：<input id="penColor" type="color" />
+                            <br ><br >
+                            Width:
+                            <input id="lineWeight" type="range" value="1" min="0.5" max="10" step="0.1"/>
+                            <br>
+                            Blurring：
+                            <input id="blurRange" type="range" value="0" min="0" max="10" step="1" /><br />
+                            <br>
+                            <div><input id="penButton" class="btn btn-info" type="button" value="Pen" /></div>
+                            <br>
+                            <div><input id="lineButton" class="btn btn-info" type="button" value="Line" /></div>
+                            <br>
+                            <div><input id="rectButton" class="btn btn-info" type="button" value="Rectangle" /></div>
+                            <br>
+                            <div><input id="circleButton" class="btn btn-info" type="button" value="Circle"/></div>
+                            <br>
+                            <div> <input id="eraserButton" class="btn btn-info" type="button" value="Eraser" /></div>
+                            <br>
+                            <div id="rectDiv">
+                                Rectangle Demo：<br />
+                                <button id="strokeRect" class="btn btn-info">strokeRect</button>
+                                <button id="fillRect" class="btn btn-info">fillRect</button>
+                            </div>
+
+                            <div id="circleDiv">
+                                Circle demo：<br />
+                                <button id="strokeCircle" class="btn btn-info">strokeCircle</button>
+                                <button id="fillCircle" class="btn btn-info">fillCircle</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-5">
+                    <h3 align="center" id=>CANVAS</h3>
+                    <div class="row" align="center" >
+
+                        <canvas id="myCanvas" width="400px" height="800px" style="border:1px solid #000000;"></canvas>
+                    </div>
+                    <div  align="center">
+
+                        <button id="btnChange" class="btn btn-info" style="margin-right:15px;">Change</button>
+                        <button id="btnSave" class="btn btn-success">Generate</button>
+
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <h3 align="center">DEMO</h3>
+                    <ul >
+                        <li>
+                            <img src="demo/Default.jpg" width="125" height="150"   class="img-thumbnail" onclick="DemoChoose('demo/Default.jpg')">
+                            <img src="demo/Supreme.jpg" width="125" height="150"   class="img-thumbnail" onclick="DemoChoose('demo/Supreme.jpg')">
+
+                        </li>
+                        <li>
+                            <img src="demo/DoubleLift.jpg" width="125" height="150"    class="img-thumbnail" onclick="DemoChoose('demo/DoubleLift.jpg')">
+                            <img src="demo/Nike.jpg" width="125" height="150"   class="img-thumbnail" onclick="DemoChoose('demo/Nike.jpg')">
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+<script type="text/javascript">
+    // use for download
+    var Download = document.getElementById("btnSave");
+    Download.onclick = function(){
+        var canvass = document.getElementById("myCanvas");
+        canvass.toBlob(function(blob) {
+            saveAs(blob, "FirstDemo.png");
+            window.location.href='clip.html';
+        });
+
+    }
+    //use for img
+
+    var adreess;
+     function DemoChoose(srcadress) {
+         adreess=srcadress;
+        //var srcadress= window.event.srcElement.src;
+
+    }
+
+    var indexDemo;
+    var StyleChangeButton = document.getElementById("btnChange");
+    StyleChangeButton.onclick=function ()
+    {
+        var mycanvas = document.getElementById('myCanvas');
+        var ctx = mycanvas.getContext('2d');
+        var img = new Image();
+        img.src = adreess;
+        ctx.drawImage(img,0,0);
+    }
+    // function deleteFileForUrl() {
+    //     filePath="C:\\Users\\HWK\\Downloads\\tt.txt"
+    //     var fso = new ActiveXObject("Scripting.FileSystemObject");
+    //     if(fso.FileExists(filePath)){
+    //         fso.DeleteFile(filePath);
+    //         return true;
+    //     }
+    //     return false;
+    // }
+
+</script>
+
+<script>
+
+    window.onload = function () {
+        var myImage=document.getElementById("myCanvas");
+        var ctx=myImage.getContext('2d');
+        var isSameMove=false;//轨迹结束判断
+        function rectXY(){this.x1=0,this.y1=0,this.x2=0,this.y2=0};//矩形对象
+        function lineXY(){this.x1=0,this.y1=0,this.x2=0,this.y2=0};//直线对象
+        function circleXY(){this.x1=0,this.y1=0,this.x2=0,this.y2=0};//圆对象
+        //重绘画布大小
+        //改变画笔颜色函数
+        var penColor=document.getElementById("penColor");
+        penColor.onchange=function(){
+
+            ctx.strokeStyle=this.value;
+            ctx.shadowColor=this.value;
+        }
+        //改变背景颜色函数
+        // var bgColor=document.getElementById("bgColor");
+        // bgColor.onchange=function(){
+        //
+        //     document.body.style.backgroundColor=this.value;
+        // }
+        //改变线条粗细
+        var lineWeight=document.getElementById("lineWeight");
+        lineWeight.onchange=function(){
+            ctx.lineWidth=this.value;
+        }
+        //改变画笔虚化值
+        var blurRange=document.getElementById("blurRange");
+        blurRange.onchange=function(){
+            ctx.shadowColor=penColor.value;
+            ctx.shadowBlur=this.value;
+        }
+        //按钮事件判定
+        var valueButton="pen";//按钮判断
+        var buttons=document.getElementsByClassName("iButton");
+        var penButton=document.getElementById("penButton");
+        var lineButton=document.getElementById("lineButton");
+        var rectButton=document.getElementById("rectButton");
+        var circleButton=document.getElementById("circleButton");
+        var eraserButton=document.getElementById("eraserButton");
+        var allclearButton=document.getElementById("allclearButton");
+        //矩形子按钮
+        var rectStyle="stroke";//子按钮判断
+        var rectDiv=document.getElementById("rectDiv");
+        var strokeRectButton=document.getElementById("strokeRect");
+        var fillRectButton=document.getElementById("fillRect");
+        //正圆子按钮
+        var circleStyle="stroke";//子按钮判断
+        var circleDiv=document.getElementById("circleDiv");
+        var strokeCircleButton=document.getElementById("strokeCircle");
+        var fillCircleButton=document.getElementById("fillCircle");
+
+        //点击画笔按钮
+        penButton.onclick=function(){
+            valueButton="pen";
+            for(var i=0;i<buttons.length;i++){
+                buttons[i].style.backgroundColor="ghostwhite";
+            }
+            ctx.globalCompositeOperation="source-over";
+            rectDiv.style.display="none";
+            circleDiv.style.display="none";
+            penButton.style.backgroundColor="#FA8072";
+        }
+        //点击线按钮
+        lineButton.onclick=function(){
+            valueButton="line";
+            for(var i=0;i<buttons.length;i++){
+                buttons[i].style.backgroundColor="ghostwhite";
+            }
+            ctx.globalCompositeOperation="source-over";
+            rectDiv.style.display="none";
+            circleDiv.style.display="none";
+            lineButton.style.backgroundColor="#FA8072";
+        }
+        //点击矩形按钮
+        rectButton.onclick=function(){
+            valueButton="rect";
+            for(var i=0;i<buttons.length;i++){
+                buttons[i].style.backgroundColor="ghostwhite";
+            }
+            ctx.globalCompositeOperation="source-over";
+            circleDiv.style.display="none";
+            rectButton.style.backgroundColor="#FA8072";
+            rectDiv.style.display="block";
+            rectStyle="stroke";
+            strokeRectButton.style.boxShadow="0 0 5px black";
+        }
+        //点击矩形子按钮：空心矩形
+        strokeRectButton.onclick=function(){
+            rectStyle="stroke";
+            fillRectButton.style.boxShadow="none";
+            strokeRectButton.style.boxShadow="0 0 5px black";
+        }
+        //点击矩形子按钮：实心矩形
+        fillRectButton.onclick=function(){
+            rectStyle="fill";
+            strokeRectButton.style.boxShadow="none";
+            fillRectButton.style.boxShadow="0 0 5px black";
+        }
+        //点击圆按钮
+        circleButton.onclick=function(){
+            valueButton="circle";
+            for(var i=0;i<buttons.length;i++){
+                buttons[i].style.backgroundColor="ghostwhite";
+            }
+            ctx.globalCompositeOperation="source-over";
+            rectDiv.style.display="none";
+            circleButton.style.backgroundColor="#FA8072";
+            circleDiv.style.display="block";
+            circleStyle="stroke";
+            strokeCircleButton.style.boxShadow="0 0 5px black";
+        }
+        //点击正圆子按钮：空心正圆
+        strokeCircleButton.onclick=function(){
+            circleStyle="stroke";
+            fillCircleButton.style.boxShadow="none";
+            strokeCircleButton.style.boxShadow="0 0 5px black";
+        }
+        //点击正圆子按钮：实心正圆
+        fillCircleButton.onclick=function(){
+            circleStyle="fill";
+            strokeCircleButton.style.boxShadow="none";
+            fillCircleButton.style.boxShadow="0 0 5px black";
+        }
+        //点击橡皮擦按钮
+        eraserButton.onclick=function(){
+            valueButton="eraser";
+            for(var i=0;i<buttons.length;i++){
+                buttons[i].style.backgroundColor="ghostwhite";
+            }
+            eraserButton.style.backgroundColor="#FA8072";
+            rectDiv.style.display="none";
+            circleDiv.style.display="none";
+            ctx.globalCompositeOperation="destination-out";
+        }
+        //点击清除按钮
+
+        //求鼠标坐标函数
+        function windowToCanvas(canvas, x, y){
+            var rect=canvas.getBoundingClientRect();
+            return {
+                x: x - rect.left * (canvas.width/rect.width),
+                y: y - rect.top * (canvas.height/rect.height)
+            };
+        }
+        //绘制图形函数
+        myImage.onmousedown=function(e){
+            /*
+            //在点击处生成方块
+            var color=["blue","red","black"];
+            var e=event||window.event;
+            var x=e.clientX;
+            var y=e.clientY;
+            var index=parseInt(Math.random()*3);
+            ctx.fillStyle=color[index];
+            ctx.fillRect(x,y,10,10);
+            */
+            //绘制轨迹
+            if(valueButton=="pen"){
+                isSameMove=true;
+                var ele=windowToCanvas(myImage,e.clientX,e.clientY);
+                ctx.beginPath();
+                ctx.moveTo(ele.x,ele.y);
+                myImage.onmousemove=function(e){
+                    if(isSameMove){
+                        var ele=windowToCanvas(myImage,e.clientX,e.clientY);
+                        ctx.lineTo(ele.x,ele.y);
+                        ctx.stroke();
+                        ctx.save();
+                    }
+                }
+            }
+            //绘制线
+            if(valueButton=="line"){
+                var ele=windowToCanvas(myImage,e.clientX,e.clientY);
+                lineXY.x1=ele.x;
+                lineXY.y1=ele.y;
+            }
+            //绘制矩形
+            if(valueButton=="rect"){
+                var ele=windowToCanvas(myImage,e.clientX,e.clientY);
+                rectXY.x1=ele.x;
+                rectXY.y1=ele.y;
+            }
+            //绘制圆
+            if(valueButton=="circle"){
+                var ele=windowToCanvas(myImage,e.clientX,e.clientY);
+                circleXY.x1=ele.x;
+                circleXY.y1=ele.y;
+            }
+            //应用橡皮擦
+            if(valueButton=="eraser"){
+                isSameMove=true;
+                var ele=windowToCanvas(myImage,e.clientX,e.clientY);
+                ctx.beginPath();
+                ctx.moveTo(ele.x,ele.y);
+                myImage.onmousemove=function(e){
+                    if(isSameMove){
+                        var ele=windowToCanvas(myImage,e.clientX,e.clientY);
+                        ctx.lineTo(ele.x,ele.y);
+                        ctx.stroke();
+                        ctx.save();
+                    }
+                }
+            }
+        }
+        myImage.onmouseup=function(e){
+            //画笔
+            if(valueButton=="pen"){
+                isSameMove=false;
+            }
+            //直线
+            if(valueButton=="line"){
+                var ele=windowToCanvas(myImage,e.clientX,e.clientY);
+                lineXY.x2=ele.x;
+                lineXY.y2=ele.y;
+                ctx.beginPath();
+                ctx.moveTo(lineXY.x1,lineXY.y1);
+                ctx.lineTo(lineXY.x2,lineXY.y2);
+                ctx.stroke();
+            }
+            //矩形
+            if(valueButton=="rect"){
+                var ele=windowToCanvas(myImage,e.clientX,e.clientY);
+                rectXY.x2=ele.x;
+                rectXY.y2=ele.y;
+                if(rectStyle=="stroke"){
+                    ctx.strokeRect(rectXY.x1,rectXY.y1,rectXY.x2-rectXY.x1,rectXY.y2-rectXY.y1);
+                }
+                if(rectStyle=="fill"){
+                    ctx.fillStyle=penColor.value;
+                    ctx.fillRect(rectXY.x1,rectXY.y1,rectXY.x2-rectXY.x1,rectXY.y2-rectXY.y1);
+                }
+            }
+            //正圆
+            if(valueButton=="circle"){
+                var ele=windowToCanvas(myImage,e.clientX,e.clientY);
+                circleXY.x2=ele.x;
+                circleXY.y2=ele.y;
+                ctx.beginPath();
+                var cx=(circleXY.x1+circleXY.x2)/2;
+                var cy=(circleXY.y1+circleXY.y2)/2;
+                var r=Math.abs((circleXY.x1-circleXY.x2)/2);
+                ctx.arc(cx,cy,r,0,Math.PI*2,true);
+                if(circleStyle=="fill"){
+                    ctx.fillStyle=penColor.value;
+                    ctx.fill();
+                }
+                ctx.stroke();
+            }
+            //橡皮
+            if(valueButton=="eraser"){
+                isSameMove=false;
+            }
+        }
+
+    }
+</script>
+
+</html>

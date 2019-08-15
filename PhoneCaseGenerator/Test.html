@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <link rel="stylesheet"href="css/bootstrap.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/FileSaver.js"></script>
+    <script type="text/javascript" src="js/canvas-toBlob.js"></script>
+    <script type="text/javascript" src="js/Blob.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+    <title>Phone Case Design</title>
+    <style type="text/css">
+        
+        body
+        {
+         background-color: #abdaee;
+        }
+        #status{
+            top: 10%;
+            left:50%;
+            color:black;
+            font-size: 40px;
+            font-weight: bold;
+            font-family: 'Bree Serif', serif;
+        }
+        canvas{
+            text-align: center;
+            /*margin: 0 auto;*/
+        }
+        #StyleButton{
+            /*position:absolute;*/
+            bottom: 20%;
+            left:40%;
+            font-size: 35px;
+            font-weight: bold;
+
+        }
+        #SaveButton{
+            /*position:absolute;*/
+            bottom: 20%;
+            left:60%;
+            font-size: 35px;
+            font-weight: bold;
+
+        }
+
+        #StyleList
+        {
+            font-size: 35px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="col-lg-12">
+    <div class="row">
+        <div class="col-sm-2">
+
+        </div>
+        <div class="col-sm-7">
+            <div align="center">
+                <label id="status">Generating the Phone Case，Wait......</label>
+            </div>
+            <div align="center">
+                <canvas id="canvas" width="400" height="800px"></canvas>
+            </div>
+
+            <div align="center">
+                <input id="StyleButton" type="button" value="Style Change"  class="btn btn-success"onclick="submitSt()" />
+                <input id="SaveButton" type="button" value="Save"   class="btn btn-success" />
+            </div>
+
+            </div>
+
+        <div class="col-sm-3">
+            <div>
+            <h3 align="center" id="StyleList">STYLE</h3>
+            </div>
+            <div>
+            <ul class="ImgList">
+                <li>
+                    <img src="Style/0.jpg" width="150" height="150" id="0"  class="img-circle" onclick="StyleIndex('0')">
+                    <img src="Style/1.jpg" width="150" height="150" id="1"   class="img-circle"onclick="StyleIndex('1')">
+                    <img src="Style/2.jpg" width="150" height="150" id="2"   class="img-circle" onclick="StyleIndex('2')">
+                </li>
+                <li>
+                    <img src="Style/3.jpg" width="150" height="150" id="3"   class="img-circle" onclick="StyleIndex('3')">
+                    <img src="Style/4.jpg" width="150" height="150" id="4"  class="img-circle" onclick="StyleIndex('4')">
+                    <img src="Style/5.jpg" width="150" height="150" id="5"   class="img-circle" onclick="StyleIndex('5')">
+                </li>
+                <li>
+                    <img src="Style/6.jpg" width="150" height="150" id="6"  class="img-circle" onclick="StyleIndex('6')">
+                    <img src="Style/7.jpg" width="150" height="150" id="7"  class="img-circle"onclick="StyleIndex('7')">
+                    <img src="Style/8.jpg" width="150" height="150" id="8"  class="img-circle"onclick="StyleIndex('8')">
+                </li>
+            </ul>
+            </div>>
+        </div>
+    </div>
+    </div>
+
+<script type="text/javascript">
+    var canvas = document.getElementById("canvas"),
+        ctx = canvas.getContext("2d"),
+        arr = [];
+    function getImageData(src,callback){
+        var im = new Image(),
+            canvas = document.createElement("canvas"),
+            ctx = canvas.getContext("2d");
+        im.src = src;
+        im.onload = function(){
+            canvas.width = this.width;
+            canvas.height = this.height;
+            ctx.drawImage(im,0,0,canvas.width,canvas.height);
+            arr.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+            callback();
+        }
+    }
+
+    getImageData("iphone.png",function(){
+        getImageData("C:\\Users\\HWK\\Downloads\\SecondDemo.png",function(){
+            make();
+            document.getElementById("status").innerHTML = 'Generate Finish';
+        });
+    });
+
+    function make(){
+        var target = arr[0],
+            add = arr[1];
+        for(var i=1;i<target.height;i++){
+            for(var j=1;j<target.width;j++){
+                var index = i * target.width * 4 + j * 4,
+                    r = target.data[index+0],
+                    g = target.data[index+1],
+                    b = target.data[index+2],
+                    a = target.data[index+3];
+                if(a<255){
+                    var index1 = (i-1) * add.width * 4 + (j-1) * 4;
+                    if(add.data[index1]){
+                        if(a==0){
+                            target.data[index] = add.data[index1];
+                            target.data[index+1] = add.data[index1+1];
+                            target.data[index+2] = add.data[index1+2];
+                            target.data[index+3] = 255;
+                        }else{
+                            var ratio = a / 255;
+                            console.log(ratio);
+                            target.data[index] = ratio * r + (1 - ratio) * add.data[index1];
+                            target.data[index+1] = ratio * g + (1 - ratio) * add.data[index1+1];
+                            target.data[index+2] =  ratio * b + (1 - ratio) * add.data[index1+2];
+                            target.data[index+3] = 255;
+                        }
+                    }else{
+                        break;
+                    }
+                }
+                continue;
+            }
+        }
+        ctx.putImageData(target,0,0);
+
+    }
+
+    var Index="5";
+    function StyleIndex(TargetIndex) {
+        Index=TargetIndex;
+    }
+
+    function exec1() {
+        var ws = new ActiveXObject("WScript.Shell");
+        ws.run('python  D:\\BerkeleyFinal\\Style-Transfer\\code.py '+Index);
+        arr.splice(0,2);//delete the first two element
+       // sleep(4000); //当前方法暂停5秒
+        getImageData("iphone.png",function(){
+            getImageData("DoubleLiftFinal.jpg",function(){
+                make();
+                document.getElementById("status").innerHTML = 'Change！';
+            });
+        });
+    }
+
+    //use for evoke the function
+    function submitSt() {
+        clipname="SecondDemo";
+        $.get("http://127.0.0.1:8000/",{'data': Index, 'type': "ALL",'name':clipname});
+        sleep(1000);
+        arr.splice(0,2);
+        sleep(1000);
+        getImageData("iphone.png",function(){
+            getImageData("C:\\Users\\HWK\\Downloads\\SecondDemoResult.png",function(){
+                make();
+                document.getElementById("status").innerHTML = 'Style Transfer Finish！';
+            });
+        });
+    }
+
+
+    function sleep(d){
+        for(var t = Date.now();Date.now() - t <= d;);
+    }
+    //save
+    var Download = document.getElementById("SaveButton");
+    Download.onclick = function(){
+        var canvass = document.getElementById("canvas");
+        canvass.toBlob(function(blob) {
+            saveAs(blob, "PhoneCase.png");
+        });
+    }
+</script>
+</body>
+</html>

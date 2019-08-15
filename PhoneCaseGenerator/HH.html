@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<canvas>您的浏览器不支持画布！</canvas>
+<div id="toolbar">
+    <h2>工具栏</h2>
+    画笔颜色：<input id="penColor" type="color" /><br />
+    背景颜色：<input id="bgColor" type="color" value="#FFE4E1"/><br />
+    线条/橡皮 粗细：<br />
+    <input id="lineWeight" type="range" value="1" min="0.5" max="10" step="0.1"/><br />
+    画笔虚化：<br />
+    <input id="blurRange" type="range" value="0" min="0" max="10" step="1" /><br />
+    <input id="penButton" class="iButton" type="button" value="画笔"  /><br />
+    <input id="lineButton" class="iButton" type="button" value="直线" /><br />
+    <input id="rectButton" class="iButton" type="button" value="矩形" /><br />
+    <input id="circleButton" class="iButton" type="button" value="正圆"/><br />
+    <input id="eraserButton" class="iButton" type="button" value="橡皮" /><br />
+    <input id="allclearButton" class="iButton" type="button" value="清空" /><br />
+
+    <div id="rectDiv">
+        矩形样式：<br />
+        <button id="strokeRect"></button>
+        <button id="fillRect"></button>
+    </div>
+
+    <div id="circleDiv">
+        正圆样式：<br />
+        <button id="strokeCircle"></button>
+        <button id="fillCircle"></button>
+    </div>
+</div>
+</body>
+<script>
+    var can=document.getElementsByTagName("canvas");
+    var cas=can[0].getContext("2d");
+    var isSameMove=false;//轨迹结束判断
+    function rectXY(){this.x1=0,this.y1=0,this.x2=0,this.y2=0};//矩形对象
+    function lineXY(){this.x1=0,this.y1=0,this.x2=0,this.y2=0};//直线对象
+    function circleXY(){this.x1=0,this.y1=0,this.x2=0,this.y2=0};//圆对象
+    //重绘画布大小
+    function resize(){
+        can[0].height=window.innerHeight;
+        can[0].width=window.innerWidth;
+    }
+    resize();
+    //改变画笔颜色函数
+    var penColor=document.getElementById("penColor");
+    penColor.onchange=function(){
+        penColor.click();
+        cas.strokeStyle=this.value;
+        cas.shadowColor=this.value;
+    }
+    //改变背景颜色函数
+    var bgColor=document.getElementById("bgColor");
+    bgColor.onchange=function(){
+        bgColor.click();
+        document.body.style.backgroundColor=this.value;
+    }
+    //改变线条粗细
+    var lineWeight=document.getElementById("lineWeight");
+    lineWeight.onchange=function(){
+        cas.lineWidth=this.value;
+    }
+    //改变画笔虚化值
+    var blurRange=document.getElementById("blurRange");
+    blurRange.onchange=function(){
+        cas.shadowColor=penColor.value;
+        cas.shadowBlur=this.value;
+    }
+    //按钮事件判定
+    var valueButton="pen";//按钮判断
+    var buttons=document.getElementsByClassName("iButton");
+    var penButton=document.getElementById("penButton");
+    var lineButton=document.getElementById("lineButton");
+    var rectButton=document.getElementById("rectButton");
+    var circleButton=document.getElementById("circleButton");
+    var eraserButton=document.getElementById("eraserButton");
+    var allclearButton=document.getElementById("allclearButton");
+    //矩形子按钮
+    var rectStyle="stroke";//子按钮判断
+    var rectDiv=document.getElementById("rectDiv");
+    var strokeRectButton=document.getElementById("strokeRect");
+    var fillRectButton=document.getElementById("fillRect");
+    //正圆子按钮
+    var circleStyle="stroke";//子按钮判断
+    var circleDiv=document.getElementById("circleDiv");
+    var strokeCircleButton=document.getElementById("strokeCircle");
+    var fillCircleButton=document.getElementById("fillCircle");
+
+    //点击画笔按钮
+    penButton.onclick=function(){
+        valueButton="pen";
+        for(var i=0;i<buttons.length;i++){
+            buttons[i].style.backgroundColor="ghostwhite";
+        }
+        cas.globalCompositeOperation="source-over";
+        rectDiv.style.display="none";
+        circleDiv.style.display="none";
+        penButton.style.backgroundColor="#FA8072";
+    }
+    //点击线按钮
+    lineButton.onclick=function(){
+        valueButton="line";
+        for(var i=0;i<buttons.length;i++){
+            buttons[i].style.backgroundColor="ghostwhite";
+        }
+        cas.globalCompositeOperation="source-over";
+        rectDiv.style.display="none";
+        circleDiv.style.display="none";
+        lineButton.style.backgroundColor="#FA8072";
+    }
+    //点击矩形按钮
+    rectButton.onclick=function(){
+        valueButton="rect";
+        for(var i=0;i<buttons.length;i++){
+            buttons[i].style.backgroundColor="ghostwhite";
+        }
+        cas.globalCompositeOperation="source-over";
+        circleDiv.style.display="none";
+        rectButton.style.backgroundColor="#FA8072";
+        rectDiv.style.display="block";
+        rectStyle="stroke";
+        strokeRectButton.style.boxShadow="0 0 5px black";
+    }
+    //点击矩形子按钮：空心矩形
+    strokeRectButton.onclick=function(){
+        rectStyle="stroke";
+        fillRectButton.style.boxShadow="none";
+        strokeRectButton.style.boxShadow="0 0 5px black";
+    }
+    //点击矩形子按钮：实心矩形
+    fillRectButton.onclick=function(){
+        rectStyle="fill";
+        strokeRectButton.style.boxShadow="none";
+        fillRectButton.style.boxShadow="0 0 5px black";
+    }
+    //点击圆按钮
+    circleButton.onclick=function(){
+        valueButton="circle";
+        for(var i=0;i<buttons.length;i++){
+            buttons[i].style.backgroundColor="ghostwhite";
+        }
+        cas.globalCompositeOperation="source-over";
+        rectDiv.style.display="none";
+        circleButton.style.backgroundColor="#FA8072";
+        circleDiv.style.display="block";
+        circleStyle="stroke";
+        strokeCircleButton.style.boxShadow="0 0 5px black";
+    }
+    //点击正圆子按钮：空心正圆
+    strokeCircleButton.onclick=function(){
+        circleStyle="stroke";
+        fillCircleButton.style.boxShadow="none";
+        strokeCircleButton.style.boxShadow="0 0 5px black";
+    }
+    //点击正圆子按钮：实心正圆
+    fillCircleButton.onclick=function(){
+        circleStyle="fill";
+        strokeCircleButton.style.boxShadow="none";
+        fillCircleButton.style.boxShadow="0 0 5px black";
+    }
+    //点击橡皮擦按钮
+    eraserButton.onclick=function(){
+        valueButton="eraser";
+        for(var i=0;i<buttons.length;i++){
+            buttons[i].style.backgroundColor="ghostwhite";
+        }
+        eraserButton.style.backgroundColor="#FA8072";
+        rectDiv.style.display="none";
+        circleDiv.style.display="none";
+        cas.globalCompositeOperation="destination-out";
+    }
+    //点击清除按钮
+    allclearButton.onclick=function(){
+        for(var i=0;i<buttons.length;i++){
+            buttons[i].style.backgroundColor="ghostwhite";
+        }
+        cas.globalCompositeOperation="source-over";
+        rectDiv.style.display="none";
+        circleDiv.style.display="none";
+        penButton.style.backgroundColor="#FA8072";
+        valueButton="pen";
+        resize();
+        cas.lineWidth=lineWeight.value;
+        cas.strokeStyle=penColor.value;
+        cas.shadowColor=penColor.value;
+        cas.shadowBlur=blurRange.value;
+    }
+    //求鼠标坐标函数
+    function windowToCanvas(canvas, x, y){
+        var rect=canvas.getBoundingClientRect();
+        return {
+            x: x - rect.left * (canvas.width/rect.width),
+            y: y - rect.top * (canvas.height/rect.height)
+        };
+    }
+    //绘制图形函数
+    can[0].onmousedown=function(e){
+        /*
+        //在点击处生成方块
+        var color=["blue","red","black"];
+        var e=event||window.event;
+        var x=e.clientX;
+        var y=e.clientY;
+        var index=parseInt(Math.random()*3);
+        cas.fillStyle=color[index];
+        cas.fillRect(x,y,10,10);
+        */
+        //绘制轨迹
+        if(valueButton=="pen"){
+            isSameMove=true;
+            var ele=windowToCanvas(can[0],e.clientX,e.clientY);
+            cas.beginPath();
+            cas.moveTo(ele.x,ele.y);
+            can[0].onmousemove=function(e){
+                if(isSameMove){
+                    var ele=windowToCanvas(can[0],e.clientX,e.clientY);
+                    cas.lineTo(ele.x,ele.y);
+                    cas.stroke();
+                    cas.save();
+                }
+            }
+        }
+        //绘制线
+        if(valueButton=="line"){
+            var ele=windowToCanvas(can[0],e.clientX,e.clientY);
+            lineXY.x1=ele.x;
+            lineXY.y1=ele.y;
+        }
+        //绘制矩形
+        if(valueButton=="rect"){
+            var ele=windowToCanvas(can[0],e.clientX,e.clientY);
+            rectXY.x1=ele.x;
+            rectXY.y1=ele.y;
+        }
+        //绘制圆
+        if(valueButton=="circle"){
+            var ele=windowToCanvas(can[0],e.clientX,e.clientY);
+            circleXY.x1=ele.x;
+            circleXY.y1=ele.y;
+        }
+        //应用橡皮擦
+        if(valueButton=="eraser"){
+            isSameMove=true;
+            var ele=windowToCanvas(can[0],e.clientX,e.clientY);
+            cas.beginPath();
+            cas.moveTo(ele.x,ele.y);
+            can[0].onmousemove=function(e){
+                if(isSameMove){
+                    var ele=windowToCanvas(can[0],e.clientX,e.clientY);
+                    cas.lineTo(ele.x,ele.y);
+                    cas.stroke();
+                    cas.save();
+                }
+            }
+        }
+    }
+    can[0].onmouseup=function(e){
+        //画笔
+        if(valueButton=="pen"){
+            isSameMove=false;
+        }
+        //直线
+        if(valueButton=="line"){
+            var ele=windowToCanvas(can[0],e.clientX,e.clientY);
+            lineXY.x2=ele.x;
+            lineXY.y2=ele.y;
+            cas.beginPath();
+            cas.moveTo(lineXY.x1,lineXY.y1);
+            cas.lineTo(lineXY.x2,lineXY.y2);
+            cas.stroke();
+        }
+        //矩形
+        if(valueButton=="rect"){
+            var ele=windowToCanvas(can[0],e.clientX,e.clientY);
+            rectXY.x2=ele.x;
+            rectXY.y2=ele.y;
+            if(rectStyle=="stroke"){
+                cas.strokeRect(rectXY.x1,rectXY.y1,rectXY.x2-rectXY.x1,rectXY.y2-rectXY.y1);
+            }
+            if(rectStyle=="fill"){
+                cas.fillStyle=penColor.value;
+                cas.fillRect(rectXY.x1,rectXY.y1,rectXY.x2-rectXY.x1,rectXY.y2-rectXY.y1);
+            }
+        }
+        //正圆
+        if(valueButton=="circle"){
+            var ele=windowToCanvas(can[0],e.clientX,e.clientY);
+            circleXY.x2=ele.x;
+            circleXY.y2=ele.y;
+            cas.beginPath();
+            var cx=(circleXY.x1+circleXY.x2)/2;
+            var cy=(circleXY.y1+circleXY.y2)/2;
+            var r=Math.abs((circleXY.x1-circleXY.x2)/2);
+            cas.arc(cx,cy,r,0,Math.PI*2,true);
+            if(circleStyle=="fill"){
+                cas.fillStyle=penColor.value;
+                cas.fill();
+            }
+            cas.stroke();
+        }
+        //橡皮
+        if(valueButton=="eraser"){
+            isSameMove=false;
+        }
+    }
+    </script>
+</html>
